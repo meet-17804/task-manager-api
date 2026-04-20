@@ -21,7 +21,7 @@ const register = async (req,res) => {
             email : email.toLowerCase(),
             password : hashedPassword
           });
-          res.json({message : "User registerd successfully"}, creatUser);
+          res.json({message : "User registerd successfully", User : creatUser});
     } catch(error){
         console.log(error.message);
         res.status(500).json({error : error.message});
@@ -32,7 +32,7 @@ const login = async (req,res) => {
     try{
         const {email, password} = req.body;
 
-        const userCreated = await User.findOne({email});
+        const userCreated = await User.findOne({email: email.toLowerCase()});
         if(!userCreated){
             return res.status(400).json({message: "Invalid credentials"});
         } 
