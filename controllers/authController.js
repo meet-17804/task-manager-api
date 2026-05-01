@@ -29,6 +29,7 @@ const register = async (req,res) => {
 }
 
 const login = async (req,res) => {
+    console.log("Login API hit");
     try{
         const {email, password} = req.body;
 
