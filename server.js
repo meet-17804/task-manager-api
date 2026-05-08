@@ -5,13 +5,14 @@ require("dotenv").config();
 const app = express(); // ✅ FIRST create app
 
 // ✅ CORS setup
-app.use(
+app.use(cors());
+/*app.use(
   cors({
     origin: ["http://localhost:3000", "http://localhost:3001"],
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     credentials: true,
   })
-);
+);*/
 
 // ✅ Middleware
 app.use(express.json());
