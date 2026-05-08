@@ -15,12 +15,12 @@ const getTodos = async (req,res) => {
             query.completed = req.query.completed === "true";
         }
     // fetch paginated todos   
-        const todos = await Todo.find({user: req.user, query : query})
+        const todos = await Todo.find(query)
         .populate("user", "name email")
         .skip(skip)
         .limit(limit)
         .sort({createdAt: -1});
-        res.json(todos);
+        
     // total count
         const total = await Todo.countDocuments({user : req.user});
         res.json({
@@ -37,7 +37,9 @@ const getTodos = async (req,res) => {
 // Create the Todo
 const createTodo = async (req,res) => {
     try{
-    const validatedData = todoSchema(req.body);
+    console.log(todoSchema);
+    
+    const validatedData = todoSchema.parse(req.body);
 
     const todo = await Todo.create({
         ...validatedData,
@@ -55,7 +57,7 @@ const getOverdueTodos = async (req,res) => {
 
     const overdue = await Todo.find({
         user : req.user,
-        dueDate : {$1t : today},
+        dueDate : {$lt : today},
         completed : false
     });
     res.json(overdue);
@@ -68,39 +70,70 @@ const deleteTodo = async (req,res) => {
         _id : id,
         user : req.user
     });
-    if(!Todo){
+    if(!todo){
         return res.status(400).json({message : "Todo not found"});
     }
     res.json({message: "Todo Deleted"});
 };
 
 //Update the Todo
-const updateTodo = async (req,res) => {
-    try{
-    const validatedData = updateSchema.parse(req.body);
-    const updated = await Todo.findOne({_id: req.params.id, user: req.user}
-    );
-    if(!Todo){
-        return res.status(400).json({message: "Todo not found"});
-    }
-    Object.assign(Todo, validatedData);
-    await Todo.save();
-    res.json({message : "Todo updated"}, updated);
-} catch(error){
-    res.status(400).json({ error: error.errors || error.message });
-}
-};
-// Toggle Todo
-const toggleTodo = async (req,res) => {
-    const id = req.params.id;
+const updateTodo = async (req, res) => {
+  try {
 
-    const todo = await Todo.findById({_id:id, user: req.user});
-    if(!todo){
-        return res.status(404).json({message: "Todo not found"});
+    const validatedData =
+      todoSchema.partial().parse(req.body);
+
+    const todo = await Todo.findOne({
+      _id: req.params.id,
+      user: req.user,
+    });
+
+    if (!todo) {
+      return res.status(404).json({
+        message: "Todo not found",
+      });
     }
-    todo.completed = !todo.completed;
-    await Todo.save()
-    res.json({message : "Toggle Todo", todo});
+
+    Object.assign(todo, validatedData);
+
+    await todo.save();
+
+    res.json({
+      message: "Todo updated",
+      todo,
+    });
+
+  } catch (error) {
+
+    res.status(400).json({
+      error: error.message,
+    });
+
+  }
+};
+
+// Toggle Todo
+const toggleTodo = async (req, res) => {
+
+  const todo = await Todo.findOne({
+    _id: req.params.id,
+    user: req.user,
+  });
+
+  if (!todo) {
+    return res.status(404).json({
+      message: "Todo not found",
+    });
+  }
+
+  todo.completed = !todo.completed;
+
+  await todo.save();
+
+  res.json({
+    message: "Todo toggled",
+    todo,
+  });
 };
 
 module.exports = {

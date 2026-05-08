@@ -17,7 +17,7 @@ router.get("/todos", protect, getTodos);
 router.post("/todos", protect, createTodo);
 router.get("/todos/overdue", getOverdueTodos);
 router.patch("/todos/:id/toggle", toggleTodo);
-router.delete("todos/:id", deleteTodo);
+router.delete("/todos/:id", deleteTodo);
 router.put("/todos/:id", updateTodo);
 
 module.exports  = router;
