@@ -47,6 +47,7 @@ const login = async (req,res) => {
         // create token
         const token = jwt.sign(
             {id :userCreated._id},
+            token,
             process.env.JWT_SECRET,
             {expiresIn: "1d"}
         );

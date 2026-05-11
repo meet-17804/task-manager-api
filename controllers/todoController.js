@@ -1,83 +1,69 @@
 const Todo = require("../models/Todo");
-const {todoSchema} = require("../validators/todoValidator");
 
-// Read the Todos
-const getTodos = async (req,res) => {
-    try{
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 5;
-        const skip = (page - 1) * limit;
+const {
+  todoSchema,
+} = require("../validators/todoValidator");
 
-        const query = {
-            user : req.user
-        };
-        if(req.query.completed){
-            query.completed = req.query.completed === "true";
-        }
-    // fetch paginated todos   
-        const todos = await Todo.find(query)
-        .populate("user", "name email")
-        .skip(skip)
-        .limit(limit)
-        .sort({createdAt: -1});
-        
-    // total count
-        const total = await Todo.countDocuments({user : req.user});
-        res.json({
-            total,
-            page,
-            pages : Math.ceil(total/limit),
-            todos
-        });
-    } catch (error){
-        res.status(500).json({message:error.message})
-    }
+
+// GET TODOS
+const getTodos = async (req, res) => {
+
+  try {
+
+    const todos = await Todo.find({
+      user: req.user,
+    }).sort({
+      createdAt: -1,
+    });
+
+    res.json({
+      success: true,
+      todos,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+
+  }
 };
 
-// Create the Todo
-const createTodo = async (req,res) => {
-    try{
-    console.log(todoSchema);
-    
-    const validatedData = todoSchema.parse(req.body);
+
+// CREATE TODO
+const createTodo = async (req, res) => {
+
+  try {
+
+    const validatedData =
+      todoSchema.parse(req.body);
 
     const todo = await Todo.create({
-        ...validatedData,
-        user : req.user
+      ...validatedData,
+      user: req.user,
     });
-       
-    res.json({message : "Todo added", todo});
-} catch(error) {
-    res.status(500).json({error : error.message || error.message});
-}
-}; 
-// Overdue Todo 
-const getOverdueTodos = async (req,res) => {
-    const today = new Date();
 
-    const overdue = await Todo.find({
-        user : req.user,
-        dueDate : {$lt : today},
-        completed : false
+    res.status(201).json({
+      success: true,
+      todo,
     });
-    res.json(overdue);
+
+  } catch (error) {
+
+    res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+
+  }
 };
 
-//Delete the Todo
-const deleteTodo = async (req,res) => {
-    const id = req.params.id;
-    const todo = await Todo.findByIdAndDelete({
-        _id : id,
-        user : req.user
-    });
-    if(!todo){
-        return res.status(400).json({message : "Todo not found"});
-    }
-    res.json({message: "Todo Deleted"});
-};
 
-//Update the Todo
+// UPDATE TODO
 const updateTodo = async (req, res) => {
+
   try {
 
     const validatedData =
@@ -90,7 +76,8 @@ const updateTodo = async (req, res) => {
 
     if (!todo) {
       return res.status(404).json({
-        message: "Todo not found",
+        success: false,
+        error: "Todo not found",
       });
     }
 
@@ -99,48 +86,95 @@ const updateTodo = async (req, res) => {
     await todo.save();
 
     res.json({
-      message: "Todo updated",
+      success: true,
       todo,
     });
 
   } catch (error) {
 
     res.status(400).json({
+      success: false,
       error: error.message,
     });
 
   }
 };
 
-// Toggle Todo
-const toggleTodo = async (req, res) => {
 
-  const todo = await Todo.findOne({
-    _id: req.params.id,
-    user: req.user,
-  });
+// DELETE TODO
+const deleteTodo = async (req, res) => {
 
-  if (!todo) {
-    return res.status(404).json({
-      message: "Todo not found",
+  try {
+
+    const todo = await Todo.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user,
     });
+
+    if (!todo) {
+      return res.status(404).json({
+        success: false,
+        error: "Todo not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Todo deleted",
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+
   }
-
-  todo.completed = !todo.completed;
-
-  await todo.save();
-
-  res.json({
-    message: "Todo toggled",
-    todo,
-  });
 };
 
+
+// TOGGLE TODO
+const toggleTodo = async (req, res) => {
+
+  try {
+
+    const todo = await Todo.findOne({
+      _id: req.params.id,
+      user: req.user,
+    });
+
+    if (!todo) {
+      return res.status(404).json({
+        success: false,
+        error: "Todo not found",
+      });
+    }
+
+    todo.completed = !todo.completed;
+
+    await todo.save();
+
+    res.json({
+      success: true,
+      todo,
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+
+  }
+};
+
+
 module.exports = {
-    getTodos,
-    createTodo,
-    getOverdueTodos,
-    deleteTodo,
-    updateTodo,
-    toggleTodo
+  getTodos,
+  createTodo,
+  updateTodo,
+  deleteTodo,
+  toggleTodo,
 };
