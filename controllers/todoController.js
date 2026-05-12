@@ -102,25 +102,51 @@ const updateTodo = async (req, res) => {
     =========================
     */
     const currentUserId =
-    req.user._id ||
-    req.user.id ||
-    req.user;
+  req.user?._id ||
+  req.user?.id ||
+  req.user;
 
 
-    if (
-    todo.user.toString() !==
-    currentUserId.toString()
-    ) {
+if (!currentUserId) {
 
-    return res.status(401).json({
+  return res.status(401).json({
+
+    success: false,
+
+    message: "User not authenticated",
+
+  });
+
+}
+
+
+if (!todo.user) {
+
+  return res.status(400).json({
+
+    success: false,
+
+    message: "Todo owner missing",
+
+  });
+
+}
+
+
+if (
+  todo.user.toString() !==
+  req.user.toString()
+) {
+
+  return res.status(401).json({
 
     success: false,
 
     message: "Unauthorized",
 
-    });
+  });
 
-   }
+}
 
     /*
     =========================
@@ -197,7 +223,7 @@ const deleteTodo = async (req, res) => {
 
     const todo = await Todo.findOneAndDelete({
       _id: req.params.id,
-      user: req.user,
+      user: req.user.toString(),
     });
 
     if (!todo) {
