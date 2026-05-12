@@ -101,7 +101,9 @@ const updateTodo = async (req, res) => {
     OWNERSHIP CHECK
     =========================
     */
+    console.log("REQ.USER:", req.user);
 
+    console.log("TODO.USER:", todo.user);
     if (
       todo.user.toString() !==
       req.user.toString()
