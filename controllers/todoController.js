@@ -66,38 +66,123 @@ const updateTodo = async (req, res) => {
 
   try {
 
-    const validatedData =
-      todoSchema.partial().parse(req.body);
+    /*
+    =========================
+    FIND TODO
+    =========================
+    */
 
-    const todo = await Todo.findOne({
-      _id: req.params.id,
-      user: req.user,
-    });
+    const todo = await Todo.findById(
+      req.params.id
+    );
+
+
+    /*
+    =========================
+    CHECK EXISTS
+    =========================
+    */
 
     if (!todo) {
+
       return res.status(404).json({
+
         success: false,
-        error: "Todo not found",
+
+        message: "Todo not found",
+
       });
+
     }
 
-    Object.assign(todo, validatedData);
 
-    await todo.save();
+    /*
+    =========================
+    OWNERSHIP CHECK
+    =========================
+    */
 
-    res.json({
+    if (
+      todo.user.toString() !==
+      req.user.toString()
+    ) {
+
+      return res.status(401).json({
+
+        success: false,
+
+        message: "Unauthorized",
+
+      });
+
+    }
+
+
+    /*
+    =========================
+    UPDATE ONLY FIELDS
+    =========================
+    */
+
+    if (req.body.task !== undefined) {
+
+      todo.task = req.body.task;
+
+    }
+
+    if (req.body.dueDate !== undefined) {
+
+      todo.dueDate = req.body.dueDate;
+
+    }
+
+    if (req.body.priority !== undefined) {
+
+      todo.priority = req.body.priority;
+
+    }
+
+
+    /*
+    =========================
+    SAVE
+    =========================
+    */
+
+    const updatedTodo =
+      await todo.save();
+
+
+    /*
+    =========================
+    RESPONSE
+    =========================
+    */
+
+    res.status(200).json({
+
       success: true,
-      todo,
-    });
 
-  } catch (error) {
+      updated: updatedTodo,
 
-    res.status(400).json({
-      success: false,
-      error: error.message,
     });
 
   }
+
+  catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+
+      success: false,
+
+      error: error.message,
+
+    });
+
+  }
+
 };
 
 
