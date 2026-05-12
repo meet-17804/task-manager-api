@@ -101,24 +101,26 @@ const updateTodo = async (req, res) => {
     OWNERSHIP CHECK
     =========================
     */
-    console.log("REQ.USER:", req.user);
+    const currentUserId =
+    req.user._id ||
+    req.user.id ||
+    req.user;
 
-    console.log("TODO.USER:", todo.user);
+
     if (
-      todo.user.toString() !==
-      req.user.toString()
+    todo.user.toString() !==
+    currentUserId.toString()
     ) {
 
-      return res.status(401).json({
+    return res.status(401).json({
 
-        success: false,
+    success: false,
 
-        message: "Unauthorized",
+    message: "Unauthorized",
 
-      });
+    });
 
-    }
-
+   }
 
     /*
     =========================
